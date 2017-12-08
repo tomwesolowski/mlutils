@@ -29,10 +29,9 @@ def cprint(msg, color):
     print(color + msg + bcolors.ENDC)
 
 
-def save(labeled_data, dirname):
-    """Saves dictionary with labels into directory with random name."""
-    filename = int(time.time())
-    pickle.dump(labeled_data, open('%s/%d.p' % (dirname, filename), 'wb'))
+def save(labeled_data, path):
+    """Saves dictionary with labels."""
+    pickle.dump(labeled_data, open(path, 'wb'))
 
 
 def load(dirname):
@@ -121,13 +120,17 @@ if __name__ == '__main__':
         filename = np.random.choice(all_files)
         label = ask(filename)
         if label:
-            labels[filename] = label
+            filename_without_dir = filename[len(args.datadir):]
+            print(filename_without_dir)
+            labels[filename_without_dir] = label
         else:
             break
 
     print("%d labeled files:" % len(labels.keys()))
     pp.pprint(labels)
 
-    save(labels, args.labelsdir)
+    labelspath = '%s/%d.p' % (args.labelsdir, int(time.time()))
+    save(labels, labelspath)
+    print("Saved into: %s" % labelspath)
 
-    print("Labeled files in total: %d" % len(load(args.labelsdir).keys()))
+    cprint("Labeled files in total: %d" % len(load(args.labelsdir).keys()), bcolors.UNDERLINE)
