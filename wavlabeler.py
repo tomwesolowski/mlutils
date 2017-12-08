@@ -81,8 +81,7 @@ def ask(filename):
     commands = dict([(label[:2], label) for label in labels])
 
     for id, (command, label) in enumerate(sorted(commands.items())):
-        print("(%s)%s" % (command, label), end="")
-        print(", " if id + 1 < len(labels) else "\n", end="")
+        print("(%s)%s, " % (command, label), end="")
     print("! to save.")
 
     command = input()
@@ -121,7 +120,6 @@ if __name__ == '__main__':
         label = ask(filename)
         if label:
             filename_without_dir = filename[len(args.datadir):]
-            print(filename_without_dir)
             labels[filename_without_dir] = label
         else:
             break
