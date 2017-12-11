@@ -1,15 +1,15 @@
 import argparse
 import fnmatch
+import glob
+import json
 import os
-import pickle
 import pprint as pp
 import time
 import wave
+from pathlib import Path
 
 import numpy as np
 import pyaudio
-
-from pathlib import Path
 
 p = pyaudio.PyAudio()
 
@@ -31,15 +31,16 @@ def cprint(msg, color):
 
 def save(labeled_data, path):
     """Saves dictionary with labels."""
-    pickle.dump(labeled_data, open(path, 'wb'))
+    with open(path, 'wb') as f:
+        json.dump(labeled_data, f)
 
 
 def load(dirname):
-    """Loads ALL pickled labels and join them into one dictionary."""
+    """Loads ALL labels and join them into one dictionary."""
     labeled_data = dict()
-    for filename in os.listdir(dirname):
-        labeled_data.update(pickle.load(
-            open('%s/%s' % (dirname, filename), 'rb')))
+    for filename in glob.glob(os.path.join(dirname, '*.json')):
+        with open('%s/%s' % (dirname, filename), 'rb') as f:
+            labeled_data.update(json.load(f))
     return labeled_data
 
 
@@ -55,20 +56,19 @@ def find_files(directory, pattern):
 def play(filename):
     """Plays wave."""
     chunk = 1024
-    file = wave.open(filename, "rb")
-
-    stream = p.open(
-        format=p.get_format_from_width(file.getsampwidth()),
-        channels=file.getnchannels(),
-        rate=file.getframerate(),
-        output=True)
-    data = file.readframes(chunk)
-    while data:
-        stream.write(data)
+    with wave.open(filename, "rb") as file:
+        stream = p.open(
+            format=p.get_format_from_width(file.getsampwidth()),
+            channels=file.getnchannels(),
+            rate=file.getframerate(),
+            output=True)
         data = file.readframes(chunk)
+        while data:
+            stream.write(data)
+            data = file.readframes(chunk)
 
-    stream.stop_stream()
-    stream.close()
+        stream.stop_stream()
+        stream.close()
 
 
 def ask(filename):
@@ -81,12 +81,13 @@ def ask(filename):
     commands = dict([(label[:2], label) for label in labels])
 
     for id, (command, label) in enumerate(sorted(commands.items())):
-        print("(%s)%s, " % (command, label), end="")
-    print("! to save.")
+        print("(%s)%s, " % (command, label), end='')
+    print()
+    print("(omit)omit, (rep)repeat, (end)end")
 
     command = input()
-    if command == "!":
-        return ""
+    if command in ['end', 'omit']:
+        return '__' + command
     if command in commands:
         label = commands[command]
         cprint("You chose: %s" % label, bcolors.OKGREEN)
@@ -118,11 +119,14 @@ if __name__ == '__main__':
     while True:
         filename = np.random.choice(all_files)
         label = ask(filename)
-        if label:
+        if label == '__end':
+            break
+        elif label == '__omit':
+            continue
+        else:
             filename_without_dir = filename[len(args.datadir):]
             labels[filename_without_dir] = label
-        else:
-            break
+        print('labeled so far: %d' % len(labels.keys()))
 
     print("%d labeled files:" % len(labels.keys()))
     pp.pprint(labels)
