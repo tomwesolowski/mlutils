@@ -31,7 +31,8 @@ def cprint(msg, color):
 
 def save(labeled_data, path):
     """Saves dictionary with labels."""
-    with open(path, 'wb') as f:
+    with open(path, 'w') as f:
+        print(type(f))
         json.dump(labeled_data, f)
 
 
@@ -135,4 +136,4 @@ if __name__ == '__main__':
     save(labels, labelspath)
     print("Saved into: %s" % labelspath)
 
-    cprint("Labeled files in total: %d" % len(load(args.labelsdir).keys()), bcolors.UNDERLINE)
+    # cprint("Labeled files in total: %d" % len(load(args.labelsdir).keys()), bcolors.UNDERLINE)
