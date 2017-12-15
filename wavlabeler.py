@@ -32,7 +32,6 @@ def cprint(msg, color):
 def save(labeled_data, path):
     """Saves dictionary with labels."""
     with open(path, 'w') as f:
-        print(type(f))
         json.dump(labeled_data, f)
 
 
@@ -40,7 +39,7 @@ def load(dirname):
     """Loads ALL labels and join them into one dictionary."""
     labeled_data = dict()
     for filename in glob.glob(os.path.join(dirname, '*.json')):
-        with open('%s/%s' % (dirname, filename), 'rb') as f:
+        with open('%s' % filename, 'r') as f:
             labeled_data.update(json.load(f))
     return labeled_data
 
@@ -132,8 +131,8 @@ if __name__ == '__main__':
     print("%d labeled files:" % len(labels.keys()))
     pp.pprint(labels)
 
-    labelspath = '%s/%d.p' % (args.labelsdir, int(time.time()))
+    labelspath = '%s/%d.json' % (args.labelsdir, int(time.time()))
     save(labels, labelspath)
     print("Saved into: %s" % labelspath)
 
-    # cprint("Labeled files in total: %d" % len(load(args.labelsdir).keys()), bcolors.UNDERLINE)
+    cprint("Labeled samples in total: %d" % len(load(args.labelsdir).keys()), bcolors.UNDERLINE)
